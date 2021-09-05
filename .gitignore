@@ -1,0 +1,14 @@
+#dependencies
+node_modules
+
+# compiled code
+dist
+
+# sam package
+.aws-sam
+
+# mac file system meta data
+.DS_Stor
+
+# Jetbrains IDE config
+.idea

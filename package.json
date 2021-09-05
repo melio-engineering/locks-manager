@@ -1,0 +1,59 @@
+{
+  "name": "@melio/locks-manager",
+  "version": "1.0.0",
+  "description": "Create MUTEX locks using DynamoDB",
+  "main": "dist/index.js",
+  "scripts": {
+    "lint": "eslint src --config .eslintrc --color",
+    "lint:fix": "eslint src --config .eslintrc --color --fix",
+    "compile": "tsc",
+    "compile:watch": "tsc --project tsconfig.local.json --watch",
+    "start": "node dist",
+    "start:watch": "nodemon --require dotenv/config --ext env,json,ts --exec ts-node src/index.ts",
+    "test": "NODE_ENV=test mocha --require ts-node/register src/**/__tests__/**/*.test.ts --colors",
+    "release:publish": "npm run compile && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/melio/locks-manager.git"
+  },
+  "author": "yariv@melio.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/melio/locks-manager/issues"
+  },
+  "homepage": "https://github.com/melio/locks-manager#readme",
+  "dependencies": {
+    "moment": "2.29.1",
+    "config": "3.3.6",
+    "dynamoose": "2.7.3",
+    "uuid": "8.3.2",
+    "log4js": "6.3.0"
+  },
+  "devDependencies": {
+    "@types/chai": "4.2.21",
+    "@types/chai-as-promised": "7.1.4",
+    "@types/config": "0.0.39",
+    "@types/mocha": "8.2.0",
+    "@types/node": "16.7.6",
+    "@types/sinon": "9.0.10",
+    "@types/uuid": "8.3.1",
+    "@typescript-eslint/eslint-plugin": "4.29.3",
+    "@typescript-eslint/parser": "4.29.3",
+    "chai": "4.3.4",
+    "chai-as-promised": "7.1.1",
+    "eslint": "7.32.0",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-config-airbnb-typescript": "14.0.0",
+    "eslint-plugin-import": "2.24.2",
+    "eslint-plugin-sort-keys-fix": "1.1.2",
+    "eslint-plugin-unused-imports": "1.1.4",
+    "mocha": "8.2.1",
+    "sinon": "10.0.0",
+    "sinon-chai": "3.6.0",
+    "ts-mocha": "8.0.0",
+    "ts-node": "10.2.1",
+    "ts-sinon": "2.0.1",
+    "typescript": "4.4.2"
+  }
+}

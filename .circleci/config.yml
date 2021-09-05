@@ -1,0 +1,79 @@
+version: 2.1
+jobs:
+  test:
+    docker:
+      - image: circleci/node:14
+
+    steps:
+      - run:
+          name: Authenticate with registry
+          command: |
+            echo "@melio:registry=https://npm.pkg.github.com/melio" > ~/.npmrc
+            echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
+
+      - checkout
+
+      - restore_cache:
+          key: v1-all-{{ checksum "package.json" }}
+
+      - run:
+          name: Install dependencies
+          command: npm install
+
+      - save_cache:
+          key: v1-all-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+
+      - run:
+          name: Lint
+          command: npm run lint
+
+      - run:
+          name: Test
+          command: npm run test
+
+  publish:
+    docker:
+      - image: circleci/node:14
+
+    steps:
+      - checkout
+
+      - run:
+          name: Authenticate with registry
+          command: |
+            echo "@melio:registry=https://npm.pkg.github.com/melio" > ~/.npmrc
+            echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
+
+      - restore_cache:
+          key: v1-all-{{ checksum "package.json" }}
+
+      - run:
+          name: Install dependencies
+          command: npm install
+
+      - save_cache:
+          key: v1-all-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+
+      - run:
+          name: Publishing to npm
+          command: npm run release:publish
+
+workflows:
+  build-test-publish:
+    jobs:
+      - test:
+          context: melio-all
+      - publish:
+          context: melio-all
+          requires:
+            - test
+          filters:
+#            tags:
+#              only: /.*/
+            branches:
+#              ignore: /.*/
+              only: main

@@ -1,0 +1,94 @@
+
+{
+  "extends": ["airbnb-typescript/base","plugin:@typescript-eslint/recommended"],
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "sort-keys-fix",
+    "unused-imports"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 9,
+    "ecmaFeatures": {
+      "impliedStrict": true
+    },
+    "project": "./tsconfig.json"
+  },
+  "parser": "@typescript-eslint/parser",
+  "ignorePatterns": ["src/codegen/**/*.ts"],
+  "rules": {
+    "@typescript-eslint/lines-between-class-members": "off",
+    "no-await-in-loop": "off",
+    "no-return-assign": "off",
+    "import/no-cycle": "off",
+    "no-restricted-syntax": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "unused-imports/no-unused-imports": "error",
+    "sort-keys-fix/sort-keys-fix": "warn",
+    "no-shadow": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-shadow": ["error"],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "import/order": ["warn", {"alphabetize": {
+      "order": "asc",
+      "caseInsensitive": true
+    }}],
+    "sort-keys": ["warn", "asc", {"caseSensitive": true, "minKeys": 2}],
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+   ],
+    "import/prefer-default-export": "off",
+    "@typescript-eslint/no-unused-expressions": ["error", { "allowShortCircuit": true, "allowTernary": true }],
+    "func-names": ["error", "never"],
+    "max-len": ["error", { "code": 240 }],
+    "no-param-reassign": ["error", { "props": false }],
+    "class-methods-use-this": "off",
+    "padding-line-between-statements": [
+      "error",
+      { "blankLine": "always", "prev": "if", "next": "*" },
+      { "blankLine": "always", "prev": "while", "next": "*" },
+      { "blankLine": "always", "prev": "for", "next": "*" },
+      { "blankLine": "always", "prev": "do", "next": "*" },
+      { "blankLine": "always", "prev": "switch", "next": "*" },
+      { "blankLine": "always", "prev": "try", "next": "*" }
+    ],
+    "@typescript-eslint/no-useless-constructor": "warn",
+    "object-curly-newline": ["error", {
+      "ObjectExpression": { "multiline": true, "consistent": true },
+      "ObjectPattern": { "multiline": true, "consistent": true },
+      "ImportDeclaration": "never",
+      "ExportDeclaration": { "multiline": true, "consistent": true }
+    }],
+    "no-underscore-dangle": ["error", { "allow": ["_id", "_requestId", "_user", "_baseSchemaUpdatedIgnoredFields"] }]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts"],
+      "rules": {
+        "import/no-extraneous-dependencies": "off"
+      }
+    },{
+      "files": ["src/**/__tests__/*.test.ts"],
+      "rules": {
+        "@typescript-eslint/no-unused-expressions": "off"
+      },
+    }, {
+      "files": ["src/**/dal/*.ts"],
+      "rules": {
+        "sort-keys": "off",
+        "sort-keys-fix/sort-keys-fix": "off"
+      }
+    }
+  ],
+  "env": {
+    "node": true
+  }
+}

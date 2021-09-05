@@ -1,0 +1,7 @@
+{
+  "locks-manager": {
+    "dynamodb": {
+      "table_name": "non-real-table"
+    }
+  }
+}
