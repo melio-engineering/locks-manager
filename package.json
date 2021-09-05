@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/melio/locks-manager.git"
+    "url": "git+https://github.com/melio/dynamodb-locks-manager.git"
   },
   "author": "yariv@melio.com",
   "license": "ISC",
