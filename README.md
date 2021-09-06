@@ -59,7 +59,7 @@ and the ```acquireLock()``` function call there are is a gap, whereas short as i
 be another process.
 In that case the second process will get green light to proceed which is a false positive response.
 
-![https://blog.revolve.team/2020/09/08/implement-mutex-with-dynamodb/](images/optimistic-locks.png)
+![https://blog.revolve.team/2020/09/08/implement-mutex-with-dynamodb/](images/optimistic-locks.jpeg)
 
 
 This locks manger is implementing the concept of mutual exclusion (mutex) locks.
