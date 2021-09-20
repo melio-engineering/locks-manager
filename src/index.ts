@@ -2,6 +2,7 @@ import config from 'config';
 import Logger from 'log4js';
 import moment from 'moment';
 import { Dynamodb } from './dynamodb';
+import * as dynamoose from 'dynamoose';
 import { getDeleteCondition } from './dynamodb/conditions/delete';
 import { getInsertCondition, FORMAT_TIMESTAMP_IN_SECONDS } from './dynamodb/conditions/insert';
 import { LockResponse } from './dynamodb/types/lock-response';
@@ -56,6 +57,7 @@ export class LocksManager {
   static init(options?: LocksManagerOptions) {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
+      dynamoose.aws.ddb();
     }
 
     return LocksManager;
@@ -108,7 +110,7 @@ export class LocksManager {
         return this.acquireWithRetry(id, tryNumber + 1, lockTimeout);
       }
 
-      throw new CouldNotAcquireLockError(e.message);
+      throw new CouldNotAcquireLockError(e.message, e.code);
     }
 
     lock.try = tryNumber;
@@ -138,5 +140,12 @@ export class LocksManager {
     }
 
     return false;
+  }
+
+  /**
+   * For beta testing only
+   */
+  getRaceConditionErrorMessage() {
+    return LocksManager.CONDITION_FAILED_ERROR_CODE;
   }
 }
