@@ -1,18 +1,18 @@
 import config from 'config';
+import * as dynamoose from 'dynamoose';
 import Logger from 'log4js';
 import moment from 'moment';
 import { Dynamodb } from './dynamodb';
-import * as dynamoose from 'dynamoose';
 import { getDeleteCondition } from './dynamodb/conditions/delete';
 import { getInsertCondition, FORMAT_TIMESTAMP_IN_SECONDS } from './dynamodb/conditions/insert';
 import { LockResponse } from './dynamodb/types/lock-response';
+import { CanOnlyInitOnceError } from './errors/can-only-init-once-error';
 import { CouldNotAcquireLockError } from './errors/could-not-acquire-lock-error';
 import { LockTimeoutTooShortError } from './errors/lock-timeout-too-short-error';
 import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
-import {CanOnlyInitOnceError} from "./errors/can-only-init-once-error";
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -61,6 +61,7 @@ export class LocksManager {
       dynamoose.aws.ddb();
       return LocksManager;
     }
+
     throw new CanOnlyInitOnceError();
   }
 
@@ -74,7 +75,7 @@ export class LocksManager {
 
   async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
     const expire = lockTimeoutIsSec || this.lockTimeoutInSec;
-    this.validateMinimalAllowedTimeOut(expire)
+    this.validateMinimalAllowedTimeOut(expire);
     const now = parseInt(moment()
       .format(FORMAT_TIMESTAMP_IN_SECONDS), 10);
     const condition = getInsertCondition(id, expire);
