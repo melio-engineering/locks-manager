@@ -12,6 +12,7 @@ import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
+import {CanOnlyInitOnceError} from "./errors/can-only-init-once-error";
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -42,14 +43,14 @@ export class LocksManager {
     this.lockTimeoutInSec = options?.lockTimeoutInSec || this.DEFAULT_LOCK_TIMEOUT_IN_SEC;
     this.logger = Logger.getLogger('locks-manager');
 
-    this.validateMininalAllowedTimeOut();
+    this.validateMinimalAllowedTimeOut(this.lockTimeoutInSec);
     Dynamodb.setTableName(tableName);
   }
 
-  private validateMininalAllowedTimeOut() {
-    if (this.lockTimeoutInSec < this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC) {
+  private validateMinimalAllowedTimeOut(timeoutInSec: number) {
+    if (timeoutInSec < this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC) {
       throw new LockTimeoutTooShortError(
-        this.lockTimeoutInSec, this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC,
+        timeoutInSec, this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC,
       );
     }
   }
@@ -58,9 +59,9 @@ export class LocksManager {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
       dynamoose.aws.ddb();
+      return LocksManager;
     }
-
-    return LocksManager;
+    throw new CanOnlyInitOnceError();
   }
 
   static getInstance() {
@@ -71,8 +72,9 @@ export class LocksManager {
     return LocksManager.instance;
   }
 
-  async acquire(id: string, lockTimeout?: number): Promise<LockResponse> {
-    const expire = lockTimeout || this.lockTimeoutInSec;
+  async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
+    const expire = lockTimeoutIsSec || this.lockTimeoutInSec;
+    this.validateMinimalAllowedTimeOut(expire)
     const now = parseInt(moment()
       .format(FORMAT_TIMESTAMP_IN_SECONDS), 10);
     const condition = getInsertCondition(id, expire);
