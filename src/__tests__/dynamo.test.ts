@@ -22,7 +22,7 @@ describe('Dynamodb locks manager', () => {
 
   before(() => {
     locksManager = LocksManager.init().getInstance();
-  })
+  });
 
   beforeEach(() => {
     dynamooseModelCreateStub = sandbox.stub(Model.prototype, 'create');
