@@ -19,8 +19,12 @@ let locksManager: any;
 chai.use(chaiPromise);
 
 describe('Dynamodb locks manager', () => {
-  beforeEach(() => {
+
+  before(() => {
     locksManager = LocksManager.init().getInstance();
+  });
+
+  beforeEach(() => {
     dynamooseModelCreateStub = sandbox.stub(Model.prototype, 'create');
     delayStub = sandbox.stub(Timers, 'delay');
   });

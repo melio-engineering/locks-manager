@@ -1,11 +1,12 @@
 import config from 'config';
+import * as dynamoose from 'dynamoose';
 import Logger from 'log4js';
 import moment from 'moment';
 import { Dynamodb } from './dynamodb';
-import * as dynamoose from 'dynamoose';
 import { getDeleteCondition } from './dynamodb/conditions/delete';
 import { getInsertCondition, FORMAT_TIMESTAMP_IN_SECONDS } from './dynamodb/conditions/insert';
 import { LockResponse } from './dynamodb/types/lock-response';
+import { CanOnlyInitOnceError } from './errors/can-only-init-once-error';
 import { CouldNotAcquireLockError } from './errors/could-not-acquire-lock-error';
 import { LockTimeoutTooShortError } from './errors/lock-timeout-too-short-error';
 import { MissingPropertyError } from './errors/missing-property-error';
@@ -42,14 +43,14 @@ export class LocksManager {
     this.lockTimeoutInSec = options?.lockTimeoutInSec || this.DEFAULT_LOCK_TIMEOUT_IN_SEC;
     this.logger = Logger.getLogger('locks-manager');
 
-    this.validateMininalAllowedTimeOut();
+    this.validateMinimalAllowedTimeOut(this.lockTimeoutInSec);
     Dynamodb.setTableName(tableName);
   }
 
-  private validateMininalAllowedTimeOut() {
-    if (this.lockTimeoutInSec < this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC) {
+  private validateMinimalAllowedTimeOut(timeoutInSec: number) {
+    if (timeoutInSec < this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC) {
       throw new LockTimeoutTooShortError(
-        this.lockTimeoutInSec, this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC,
+        timeoutInSec, this.MINIMAL_ALLOWED_TIMEOUT_IN_SEC,
       );
     }
   }
@@ -58,9 +59,10 @@ export class LocksManager {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
       dynamoose.aws.ddb();
+      return LocksManager;
     }
 
-    return LocksManager;
+    throw new CanOnlyInitOnceError();
   }
 
   static getInstance() {
@@ -71,8 +73,9 @@ export class LocksManager {
     return LocksManager.instance;
   }
 
-  async acquire(id: string, lockTimeout?: number): Promise<LockResponse> {
-    const expire = lockTimeout || this.lockTimeoutInSec;
+  async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
+    const expire = lockTimeoutIsSec || this.lockTimeoutInSec;
+    this.validateMinimalAllowedTimeOut(expire);
     const now = parseInt(moment()
       .format(FORMAT_TIMESTAMP_IN_SECONDS), 10);
     const condition = getInsertCondition(id, expire);
