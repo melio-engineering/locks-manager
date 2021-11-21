@@ -74,21 +74,23 @@ export class LocksManager {
   }
 
   async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
-    const expire = lockTimeoutIsSec || this.lockTimeoutInSec;
-    this.validateMinimalAllowedTimeOut(expire);
-    const now = parseInt(moment()
-      .format(FORMAT_TIMESTAMP_IN_SECONDS), 10);
-    const condition = getInsertCondition(id, expire);
+    const lockHoldTime = lockTimeoutIsSec || this.lockTimeoutInSec;
+    this.validateMinimalAllowedTimeOut(lockHoldTime);
+    const expire = parseInt(
+      moment()
+        .add(lockHoldTime, 'seconds')
+        .format(FORMAT_TIMESTAMP_IN_SECONDS), 10);
+    const condition = getInsertCondition(id);
 
     const lock = await Dynamodb.createLock({
       id,
-      timestamp: now,
+      timestamp: expire,
     }, {
       condition,
       overwrite: true,
     });
 
-    this.logger.debug('got lock', {
+    this.logger.debug('Got lock', {
       id,
     });
 
@@ -125,7 +127,7 @@ export class LocksManager {
       throw new MissingPropertyError(['id', 'owner']);
     }
 
-    this.logger.debug('releasing lock', {
+    this.logger.debug('Releasing lock', {
       id: lock,
     });
 

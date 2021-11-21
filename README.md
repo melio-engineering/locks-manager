@@ -103,7 +103,7 @@ lock.release(lock);
 // Or wrap your code with lock
 const cb = () => {
  ...do some code need lock
-}1
+}
 id = 'some-unique-id';
 
 locksManager.withLock(id, cb);
