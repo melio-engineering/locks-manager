@@ -147,6 +147,10 @@ export class LocksManager {
     return false;
   }
 
+  async isLocked(id: string) {
+    return Dynamodb.isLocked(id);
+  }
+
   /**
    * For beta testing only
    */
