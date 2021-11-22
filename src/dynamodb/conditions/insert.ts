@@ -1,8 +1,8 @@
 import { Condition } from 'dynamoose';
-import { Dates } from '../../utils/dates';
+import { Timestamp } from '../../utils/timestamp';
 
 export const getInsertCondition = (id: string) => {
-  const now = Dates.getTimestamp();
+  const now = Timestamp.get();
   return new Condition({
     ConditionExpression: '#key <> :key OR (#key = :key AND #expire < :now)',
     ExpressionAttributeNames: {
