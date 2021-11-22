@@ -31,8 +31,7 @@ export class Dynamodb {
     return lockModel.delete(document, options);
   }
 
-  static isLocked(id: string): Promise<Lock | null> {
-    const lockModel = Dynamodb.getModel();
-    return lockModel.get(id);
+  static getById(id: string): Promise<Lock | undefined> {
+    return Dynamodb.getModel().get(id);
   }
 }
