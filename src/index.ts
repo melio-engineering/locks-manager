@@ -4,6 +4,7 @@ import Logger from 'log4js';
 import { Dynamodb } from './dynamodb';
 import { getDeleteCondition } from './dynamodb/conditions/delete';
 import { getInsertCondition } from './dynamodb/conditions/insert';
+import { Lock } from './dynamodb/models/lock';
 import { LockResponse } from './dynamodb/types/lock-response';
 import { CanOnlyInitOnceError } from './errors/can-only-init-once-error';
 import { CouldNotAcquireLockError } from './errors/could-not-acquire-lock-error';
@@ -144,8 +145,8 @@ export class LocksManager {
   }
 
   async isLocked(id: string): Promise<boolean> {
-    const { timestamp } = await Dynamodb.getById(id);
-    return timestamp < Dates.getTimestamp();
+    const lock: Lock  = await Dynamodb.getById(id);
+    return lock.timestamp && (lock.timestamp > Dates.getTimestamp());
   }
 
   /**
