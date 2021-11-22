@@ -13,7 +13,6 @@ import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Dates } from './utils/dates';
 import { Timers } from './utils/timers';
-import {Lock} from "./dynamodb/models/lock";
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec

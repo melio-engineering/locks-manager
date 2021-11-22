@@ -2,7 +2,6 @@ import * as dynamoose from 'dynamoose';
 import { DocumentSaveSettings } from 'dynamoose/dist/Document';
 import { ModelType } from 'dynamoose/dist/General';
 import { MissingTableNameError } from '../errors/missing-table-name-error';
-import { Dates } from '../utils/dates';
 import { Lock } from './models/lock';
 import { schema } from './schema';
 import { schemaOptions } from './schema-options';
