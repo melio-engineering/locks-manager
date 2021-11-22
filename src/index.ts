@@ -13,6 +13,7 @@ import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Dates } from './utils/dates';
 import { Timers } from './utils/timers';
+import {Lock} from "./dynamodb/models/lock";
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -76,7 +77,7 @@ export class LocksManager {
   async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
     const lockHoldTime = lockTimeoutIsSec || this.lockTimeoutInSec;
     this.validateMinimalAllowedTimeOut(lockHoldTime);
-    const expire = parseInt(Dates.getLockTtlTimestamp(lockHoldTime), 10);
+    const expire = Dates.getLockTtlTimestamp(lockHoldTime);
     const condition = getInsertCondition(id);
     const lock = await Dynamodb.createLock({
       id,
@@ -144,8 +145,8 @@ export class LocksManager {
   }
 
   async isLocked(id: string): Promise<boolean> {
-    const lock = await Dynamodb.getLockedItem(id);
-    return !!lock.count;
+    const { timestamp } = await Dynamodb.getById(id);
+    return timestamp < Dates.getTimestamp();
   }
 
   /**
