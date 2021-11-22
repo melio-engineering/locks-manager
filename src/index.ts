@@ -150,7 +150,7 @@ export class LocksManager {
       return false;
     }
 
-    return lock.timestamp && (lock.timestamp > Timestamp.get());
+    return lock.timestamp > Timestamp.get();
   }
 
   /**
