@@ -11,8 +11,8 @@ import { LockTimeoutTooShortError } from './errors/lock-timeout-too-short-error'
 import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
+import { Dates } from './utils/dates';
 import { Timers } from './utils/timers';
-import {Dates} from "./utils/dates";
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -144,8 +144,8 @@ export class LocksManager {
   }
 
   async isLocked(id: string): Promise<boolean> {
-    const lock = await Dynamodb.getById(id);
-    return !!lock;
+    const lock = await Dynamodb.getLockedItem(id);
+    return !!lock.count;
   }
 
   /**

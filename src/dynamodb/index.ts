@@ -2,6 +2,7 @@ import * as dynamoose from 'dynamoose';
 import { DocumentSaveSettings } from 'dynamoose/dist/Document';
 import { ModelType } from 'dynamoose/dist/General';
 import { MissingTableNameError } from '../errors/missing-table-name-error';
+import { Dates } from '../utils/dates';
 import { Lock } from './models/lock';
 import { schema } from './schema';
 import { schemaOptions } from './schema-options';
@@ -33,5 +34,14 @@ export class Dynamodb {
 
   static getById(id: string): Promise<Lock | undefined> {
     return Dynamodb.getModel().get(id);
+  }
+
+  static async getLockedItem(id: string): Promise<{ count: number, scannedCount: number }> {
+    const lockModel: ModelType<Lock> = Dynamodb.getModel();
+    const condition = new dynamoose.Condition().where('id').eq(id).and().where('timestamp').lt(Dates.getTimestamp());
+    return lockModel
+      .scan(condition)
+      .count()
+      .exec();
   }
 }

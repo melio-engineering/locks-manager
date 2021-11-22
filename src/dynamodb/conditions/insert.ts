@@ -1,5 +1,5 @@
 import { Condition } from 'dynamoose';
-import {Dates} from "../../utils/dates";
+import { Dates } from '../../utils/dates';
 
 export const getInsertCondition = (id: string) => {
   const now = parseInt(Dates.getTimestamp(), 10);
