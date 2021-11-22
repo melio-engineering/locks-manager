@@ -107,6 +107,10 @@ const cb = () => {
 id = 'some-unique-id';
 
 locksManager.withLock(id, cb);
+
+// Check if lock exists
+// Will return true if id exist and lock is active, false otherwise.
+const isLocked = await locksManager.isLocked(id);
 ```
 
 #### Release History
