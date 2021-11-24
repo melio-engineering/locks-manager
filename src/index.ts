@@ -144,7 +144,7 @@ export class LocksManager {
     return false;
   }
 
-  async isLocked(id: string): Promise<boolean | undefined> {
+  async isLocked(id: string): Promise<boolean> {
     const lock: Lock  = await Dynamodb.getById(id);
     if (!lock) {
       return false;
