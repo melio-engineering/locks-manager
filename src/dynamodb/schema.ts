@@ -12,6 +12,9 @@ export const schema = new dynamoose.Schema({
   timestamp: {
     type: Number,
   },
+  ttl: {
+    type: Number,
+  },
 }, {
   saveUnknown: false,
 });

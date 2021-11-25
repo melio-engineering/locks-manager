@@ -82,6 +82,7 @@ export class LocksManager {
     const lock = await Dynamodb.createLock({
       id,
       timestamp: expire,
+      ttl: expire,
     }, {
       condition,
       overwrite: true,
