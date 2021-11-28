@@ -13,7 +13,7 @@ import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
-import { Timestamp } from './utils/timestamp';
+import { getDynamoTtlUtcTimestamp, getLockTtlUtcTimestamp, getUctTimestamp } from './utils/timestamp';
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -77,12 +77,12 @@ export class LocksManager {
   async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
     const lockHoldTime = lockTimeoutIsSec || this.lockTimeoutInSec;
     this.validateMinimalAllowedTimeOut(lockHoldTime);
-    const expire = Timestamp.getLockTtl(lockHoldTime);
+    const expire = getLockTtlUtcTimestamp(lockHoldTime);
     const condition = getInsertCondition(id);
     const lock = await Dynamodb.createLock({
       id,
       timestamp: expire,
-      ttl: expire,
+      ttl: getDynamoTtlUtcTimestamp(lockHoldTime),
     }, {
       condition,
       overwrite: true,
@@ -151,7 +151,7 @@ export class LocksManager {
       return false;
     }
 
-    return lock.timestamp > Timestamp.get();
+    return lock.timestamp > getUctTimestamp();
   }
 
   /**
