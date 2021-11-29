@@ -13,7 +13,7 @@ import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
-import { getDynamoTtlUtcTimestamp, getLockTtlUtcTimestamp, getUctTimestamp } from './utils/timestamp';
+import { getDynamoTtlUtcTimestamp, getLockTtlUtcTimestamp, getUtcTimestamp } from './utils/timestamp';
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -151,7 +151,7 @@ export class LocksManager {
       return false;
     }
 
-    return lock.timestamp > getUctTimestamp();
+    return lock.timestamp > getUtcTimestamp();
   }
 
   /**
