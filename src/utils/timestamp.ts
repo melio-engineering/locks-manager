@@ -9,18 +9,7 @@ export function getUtcTimestamp(): number {
     10);
 }
 
-export function getLockTtlUtcTimestamp(lockHoldTime: number): number {
-  const utcTimestamp: moment.Moment = getUtcTimeHandler();
-  return addSecondsOnTimestamp(utcTimestamp, lockHoldTime);
-}
-
-export function getDynamoTtlUtcTimestamp(lockHoldTimeInSec: number): number {
-  const dynamoRecordTtlIsSec = lockHoldTimeInSec + 1;
-  const utcTimestamp: moment.Moment = getUtcTimeHandler();
-  return addSecondsOnTimestamp(utcTimestamp, dynamoRecordTtlIsSec);
-}
-
-function addSecondsOnTimestamp(utcTimestamp: moment.Moment, lockHoldTime: number) {
+export function addSecondsOnTimestamp(utcTimestamp: moment.Moment, lockHoldTime: number) {
   return parseInt(
     utcTimestamp
       .add(lockHoldTime, 'seconds')
@@ -28,6 +17,6 @@ function addSecondsOnTimestamp(utcTimestamp: moment.Moment, lockHoldTime: number
     10);
 }
 
-function getUtcTimeHandler(): moment.Moment {
+export function getUtcTimeHandler(): moment.Moment {
   return moment().utc();
 }

@@ -1,6 +1,7 @@
 import config from 'config';
 import * as dynamoose from 'dynamoose';
 import Logger from 'log4js';
+import moment from 'moment';
 import { Dynamodb } from './dynamodb';
 import { getDeleteCondition } from './dynamodb/conditions/delete';
 import { getInsertCondition } from './dynamodb/conditions/insert';
@@ -13,7 +14,7 @@ import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
-import { getDynamoTtlUtcTimestamp, getLockTtlUtcTimestamp, getUtcTimestamp } from './utils/timestamp';
+import { addSecondsOnTimestamp, getUtcTimeHandler, getUtcTimestamp } from './utils/timestamp';
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -56,6 +57,17 @@ export class LocksManager {
     }
   }
 
+  private getLockTtlUtcTimestamp(lockHoldTime: number): number {
+    const utcTimestamp: moment.Moment = getUtcTimeHandler();
+    return addSecondsOnTimestamp(utcTimestamp, lockHoldTime);
+  }
+
+  private getDynamoTtlUtcTimestamp(lockHoldTimeInSec: number): number {
+    const dynamoRecordTtlIsSec = lockHoldTimeInSec + 1;
+    const utcTimestamp: moment.Moment = getUtcTimeHandler();
+    return addSecondsOnTimestamp(utcTimestamp, dynamoRecordTtlIsSec);
+  }
+
   static init(options?: LocksManagerOptions) {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
@@ -77,12 +89,12 @@ export class LocksManager {
   async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
     const lockHoldTime = lockTimeoutIsSec || this.lockTimeoutInSec;
     this.validateMinimalAllowedTimeOut(lockHoldTime);
-    const expire = getLockTtlUtcTimestamp(lockHoldTime);
+    const expire = this.getLockTtlUtcTimestamp(lockHoldTime);
     const condition = getInsertCondition(id);
     const lock = await Dynamodb.createLock({
       id,
       timestamp: expire,
-      ttl: getDynamoTtlUtcTimestamp(lockHoldTime),
+      ttl: this.getDynamoTtlUtcTimestamp(lockHoldTime),
     }, {
       condition,
       overwrite: true,
