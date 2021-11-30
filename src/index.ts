@@ -16,6 +16,8 @@ import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
 import { addSecondsOnTimestamp, getUtcTimeHandler, getUtcTimestamp } from './utils/timestamp';
 
+const ONE_SECOND = 1;
+
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
   private readonly MINIMAL_ALLOWED_TIMEOUT_IN_SEC = 30;
@@ -62,12 +64,6 @@ export class LocksManager {
     return addSecondsOnTimestamp(utcTimestamp, lockHoldTime);
   }
 
-  private getDynamoTtlUtcTimestamp(lockHoldTimeInSec: number): number {
-    const dynamoRecordTtlIsSec = lockHoldTimeInSec + 1;
-    const utcTimestamp: moment.Moment = getUtcTimeHandler();
-    return addSecondsOnTimestamp(utcTimestamp, dynamoRecordTtlIsSec);
-  }
-
   static init(options?: LocksManagerOptions) {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
@@ -94,7 +90,7 @@ export class LocksManager {
     const lock = await Dynamodb.createLock({
       id,
       timestamp: expire,
-      ttl: this.getDynamoTtlUtcTimestamp(lockHoldTime),
+      ttl: this.getLockTtlUtcTimestamp(lockHoldTime + ONE_SECOND),
     }, {
       condition,
       overwrite: true,
