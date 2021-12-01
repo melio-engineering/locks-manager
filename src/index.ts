@@ -4,7 +4,8 @@ import Logger from 'log4js';
 import moment from 'moment';
 import { Dynamodb } from './dynamodb';
 import { getDeleteCondition } from './dynamodb/conditions/delete';
-import { getInsertCondition, FORMAT_TIMESTAMP_IN_SECONDS } from './dynamodb/conditions/insert';
+import { getInsertCondition } from './dynamodb/conditions/insert';
+import { Lock } from './dynamodb/models/lock';
 import { LockResponse } from './dynamodb/types/lock-response';
 import { CanOnlyInitOnceError } from './errors/can-only-init-once-error';
 import { CouldNotAcquireLockError } from './errors/could-not-acquire-lock-error';
@@ -13,6 +14,9 @@ import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { Timers } from './utils/timers';
+import { addSecondsOnTimestamp, getUtcTimeHandler, getUtcTimestamp } from './utils/timestamp';
+
+const ONE_SECOND = 1;
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
@@ -55,6 +59,11 @@ export class LocksManager {
     }
   }
 
+  private getLockTtlUtcTimestamp(lockHoldTime: number): number {
+    const utcTimestamp: moment.Moment = getUtcTimeHandler();
+    return addSecondsOnTimestamp(utcTimestamp, lockHoldTime);
+  }
+
   static init(options?: LocksManagerOptions) {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
@@ -74,21 +83,20 @@ export class LocksManager {
   }
 
   async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
-    const expire = lockTimeoutIsSec || this.lockTimeoutInSec;
-    this.validateMinimalAllowedTimeOut(expire);
-    const now = parseInt(moment()
-      .format(FORMAT_TIMESTAMP_IN_SECONDS), 10);
-    const condition = getInsertCondition(id, expire);
-
+    const lockHoldTime = lockTimeoutIsSec || this.lockTimeoutInSec;
+    this.validateMinimalAllowedTimeOut(lockHoldTime);
+    const expire = this.getLockTtlUtcTimestamp(lockHoldTime);
+    const condition = getInsertCondition(id);
     const lock = await Dynamodb.createLock({
       id,
-      timestamp: now,
+      timestamp: expire,
+      ttl: this.getLockTtlUtcTimestamp(lockHoldTime + ONE_SECOND),
     }, {
       condition,
       overwrite: true,
     });
 
-    this.logger.debug('got lock', {
+    this.logger.debug('Got lock', {
       id,
     });
 
@@ -125,7 +133,7 @@ export class LocksManager {
       throw new MissingPropertyError(['id', 'owner']);
     }
 
-    this.logger.debug('releasing lock', {
+    this.logger.debug('Releasing lock', {
       id: lock,
     });
 
@@ -143,6 +151,15 @@ export class LocksManager {
     }
 
     return false;
+  }
+
+  async isLocked(id: string): Promise<boolean> {
+    const lock: Lock  = await Dynamodb.getById(id);
+    if (!lock) {
+      return false;
+    }
+
+    return lock.timestamp > getUtcTimestamp();
   }
 
   /**

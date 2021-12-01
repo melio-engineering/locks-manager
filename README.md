@@ -103,11 +103,19 @@ lock.release(lock);
 // Or wrap your code with lock
 const cb = () => {
  ...do some code need lock
-}1
+}
 id = 'some-unique-id';
 
 locksManager.withLock(id, cb);
+
+// Check if lock exists
+// Will return true if id exist and lock is active, false otherwise.
+const isLocked = await locksManager.isLocked(id);
 ```
+
+#### Release History
+ * 1.0.0 - First release Lock manager based on DynamoDb
+ * 2.0.0 - **Note! This version is not backward compatible with previous version.** The locking concept has changed. This version will set lock expiration time as `now + requested locking time`. New lock request will compare between `now` and expiration time as it was set in the record.
 
 ##### References
 1. [The right way to implement a mutex with dynamodb](https://blog.revolve.team/2020/09/08/implement-mutex-with-dynamodb/)

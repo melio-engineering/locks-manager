@@ -1,6 +1,6 @@
 {
   "name": "@melio/locks-manager",
-  "version": "1.0.1",
+  "version": "2.0.0-rc.1",
   "description": "Create MUTEX locks using DynamoDB",
   "main": "dist/index.js",
   "scripts": {
@@ -25,11 +25,11 @@
   },
   "homepage": "https://github.com/melio/locks-manager#readme",
   "dependencies": {
-    "moment": "2.29.1",
     "config": "3.3.6",
     "dynamoose": "2.7.3",
-    "uuid": "8.3.2",
-    "log4js": "6.3.0"
+    "log4js": "6.3.0",
+    "moment": "2.29.1",
+    "uuid": "8.3.2"
   },
   "devDependencies": {
     "@types/chai": "4.2.21",
