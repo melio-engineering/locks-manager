@@ -1,6 +1,6 @@
 {
   "name": "@melio/locks-manager",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0",
   "description": "Create MUTEX locks using DynamoDB",
   "main": "dist/index.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "type": "git",
     "url": "git+https://github.com/melio/dynamodb-locks-manager.git"
   },
-  "author": "yariv@melio.com",
+  "author": "data-platform@melio.com",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/melio/locks-manager/issues"
