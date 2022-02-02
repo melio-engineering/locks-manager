@@ -68,7 +68,68 @@ to assure atomic cations and exclusion.
 We have also added another feature to the locks where each lock has both id and owner.  
 Meaning two different processes won't be able to hijack a lock form one another.
 
+## Prerequisite
+In order to use Locks Manager you must have a dynamoDb instance running and a dedicated table 
+For locks (and of coarse aws policy) .<br>
+We recommend the usage of different table for each process.
+The table schema should be as follows:
+(This example is using terraform, however, you cna build the table in any other way)
 
+```
+ resource aws_dynamodb_table "%RESOURCE_NAME%" {
+  name         = "%TABLE_NAME%"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "%NAME%"
+    Environment = %ENV%
+  }
+}
+
+resource aws_iam_role_policy "%RESOURCE_NAME%" {
+  name_prefix = "%PREFIX%"
+  role        = aws_iam_role.main.id
+
+  policy = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Sid: "ListAndDescribe",
+        Effect: "Allow",
+        Action: [
+          "dynamodb:List*",
+          "dynamodb:DescribeTimeToLive"
+        ],
+        Resource: "*"
+      },
+      {
+        Sid: "SpecificTable",
+        Effect: "Allow",
+        Action: [
+          "dynamodb:DescribeTable",
+          "dynamodb:Get*",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:Delete*",
+          "dynamodb:Update*",
+          "dynamodb:PutItem"
+        ],
+        Resource: [
+          "arn:aws:dynamodb:*:*:table/${aws_dynamodb_table.%TABLE_NAME%.name}",
+          "arn:aws:dynamodb:*:*:table/${aws_dynamodb_table.%TABLE_NAME%.name}/index/*"
+        ]
+      }
+    ]
+  })
+}
+
+```
 
 ## Usage
 
@@ -78,38 +139,38 @@ import { LocksManager} from '@melio/locksmanager'
 // The options object and each of its properties are all optional.
 // If not provided default values will be applied.
 const options: LocksManagerOptions = {
-  tableName: 'your-custom-table';
-  lockTimeoutInSec: 60; // Min 30 sec
-  maxAllowedTriesNumber: 15;
-  lockRetryIntervalInMs: 2000;
+  tableName: 'your-custom-table',
+  lockTimeoutInSec: 60, // Min 30 sec
+  maxAllowedTriesNumber: 15,
+  lockRetryIntervalInMs: 2000,
 }
 
 LocksManager.init([options]);
 
-const locksManager: LocksMaanger = LocksManager.getInstance();
+const locksManager: LocksManager = LocksManager.getInstance();
 
 const id = 'some-unique-id';
 
 // Use either acquire for single attempet  
-const lock = locksManager.acquire(id);
+const lock = await locksManager.acquire(id);
 
 // or acquireWithRetry for multiple attempts
-const lock = locksManager.acquireWithRetry(id);
+const lock = await locksManager.acquireWithRetry(id);
 
-...Some code need db locking 
+// ...Some code need db locking 
 
-lock.release(lock);
+await locksManager.release(lock);
 
 // Or wrap your code with lock
 const cb = () => {
- ...do some code need lock
+ // ...do some code need lock
 }
-id = 'some-unique-id';
 
-locksManager.withLock(id, cb);
+await locksManager.withLock(id, cb);
 
 // Check if lock exists
-// Will return true if id exist and lock is active, false otherwise.
+// Will return true if id exist and current time is before is active, false otherwise.
+
 const isLocked = await locksManager.isLocked(id);
 ```
 
