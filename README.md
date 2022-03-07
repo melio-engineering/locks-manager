@@ -70,65 +70,75 @@ Meaning two different processes won't be able to hijack a lock form one another.
 
 ## Prerequisite
 In order to use Locks Manager you must have a dynamoDb instance running and a dedicated table 
-For locks (and of coarse aws policy) .<br>
+for locks (and of coarse aws policy) .<br>
 We recommend the usage of different table for each process.
 The table schema should be as follows:
-(This example is using terraform, however, you cna build the table in any other way)
+(This example is using Cloudformation, however, you cna build the table in any other way)
 
 ```
- resource aws_dynamodb_table "%RESOURCE_NAME%" {
-  name         = "%TABLE_NAME%"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  ##########################################
+  # DynamoDb Tables                        #
+  ##########################################
 
-  attribute {
-    name = "id"
-    type = "S"
-  }
+  LocksManagerDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      TableName: !Sub '${Environment}-masi-locks-manager'
+      Tags:
+      - Key: Name
+        Value: masi-locks-manager
+      - Key: Environment
+        Value: !Ref Environment
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
 
-  tags = {
-    Name        = "%NAME%"
-    Environment = %ENV%
-  }
-}
+ ##########################################
+ #  Lambda with policy example            #
+ ##########################################
 
-resource aws_iam_role_policy "%RESOURCE_NAME%" {
-  name_prefix = "%PREFIX%"
-  role        = aws_iam_role.main.id
-
-  policy = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
-      {
-        Sid: "ListAndDescribe",
-        Effect: "Allow",
-        Action: [
-          "dynamodb:List*",
-          "dynamodb:DescribeTimeToLive"
-        ],
-        Resource: "*"
-      },
-      {
-        Sid: "SpecificTable",
-        Effect: "Allow",
-        Action: [
-          "dynamodb:DescribeTable",
-          "dynamodb:Get*",
-          "dynamodb:Query",
-          "dynamodb:Scan",
-          "dynamodb:Delete*",
-          "dynamodb:Update*",
-          "dynamodb:PutItem"
-        ],
-        Resource: [
-          "arn:aws:dynamodb:*:*:table/${aws_dynamodb_table.%TABLE_NAME%.name}",
-          "arn:aws:dynamodb:*:*:table/${aws_dynamodb_table.%TABLE_NAME%.name}/index/*"
-        ]
-      }
-    ]
-  })
-}
-
+  FunctionWithLockPolicyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: This lambda is using locks manager
+      FunctionName: update-resource-with-locks
+      Handler: dist/handlers/example/index.handler
+      MemorySize: 128
+      Timeout: 5
+      Policies:
+        - Statement:
+            - Sid: DynamodbListAndDescribe
+              Effect: Allow
+              Action: [
+                 "dynamodb:List*",
+                 "dynamodb:DescribeReservedCapacity*",
+                 "dynamodb:DescribeLimits",
+                 "dynamodb:DescribeTimeToLive"
+              ]
+              Resource: !GetAtt LocksManagerDynamoDbTable.Arn
+            - Sid: LocksManagerTablePremissions
+              Effect: Allow
+              Action: [
+                 "dynamodb:DescribeTable",
+                 "dynamodb:Get*",
+                 "dynamodb:Query",
+                 "dynamodb:Scan",
+                 "dynamodb:Delete*",
+                 "dynamodb:Update*",
+                 "dynamodb:PutItem"
+              ]
+              Resource: !GetAtt LocksManagerDynamoDbTable.Arn
+      Environment:
+        Variables:
+        # Allow usage of table name as env params inside the lambda.
+          LOCK_MANAGER_TABLE_NAME: !Ref LocksManagerDynamoDbTable
 ```
 
 ## Usage
