@@ -44,7 +44,7 @@ Mutex locks implement the following guidelines:
 In order to achieve the mutex functionality using a DB atomic actions are due.
 Take the following implementation, for example:
 
-``` 
+```
 function acquireLock(lockId){
     const lock = this.dynamoDB.getLockById(id);
     if (!lock) {
@@ -53,7 +53,7 @@ function acquireLock(lockId){
     }
     return false;
 }
-``` 
+```
 This approach implements the optimistic lock, meaning between the ```getLockById()``` function call
 and the ```acquireLock()``` function call there are is a gap, whereas short as it is there can still
 be another process.
@@ -69,7 +69,7 @@ We have also added another feature to the locks where each lock has both id and 
 Meaning two different processes won't be able to hijack a lock form one another.
 
 ## Prerequisite
-In order to use Locks Manager you must have a dynamoDb instance running and a dedicated table 
+In order to use Locks Manager you must have a dynamoDb instance running and a dedicated table
 For locks (and of coarse aws policy) .<br>
 We recommend the usage of different table for each process.
 The table schema should be as follows:
@@ -157,16 +157,9 @@ const lock = await locksManager.acquire(id);
 // or acquireWithRetry for multiple attempts
 const lock = await locksManager.acquireWithRetry(id);
 
-// ...Some code need db locking 
+// ...Some code need db locking
 
 await locksManager.release(lock);
-
-// Or wrap your code with lock
-const cb = () => {
- // ...do some code need lock
-}
-
-await locksManager.withLock(id, cb);
 
 // Check if lock exists
 // Will return true if id exist and current time is before is active, false otherwise.
@@ -182,6 +175,3 @@ const isLocked = await locksManager.isLocked(id);
 1. [The right way to implement a mutex with dynamodb](https://blog.revolve.team/2020/09/08/implement-mutex-with-dynamodb/)
 2. [Conditional Expressions in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ConditionExpressions.html)
 3. [Building Distributed Locks with the DynamoDB Lock Client](https://aws.amazon.com/blogs/database/building-distributed-locks-with-the-dynamodb-lock-client/)
-
-
-
