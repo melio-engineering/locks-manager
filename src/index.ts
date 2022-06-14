@@ -16,8 +16,6 @@ import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
 import { addSecondsOnTimestamp, getUtcTimeHandler, getUtcTimestamp } from './utils/timestamp';
 
-const ONE_SECOND = 1;
-
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
   private readonly MINIMAL_ALLOWED_TIMEOUT_IN_SEC = 30;
@@ -118,15 +116,15 @@ export class LocksManager {
     id: string,
     lockTimeoutInSec?: number,
   ): Promise<LockResponse> {
-    const lockHoldTime = lockTimeoutInSec || this.lockTimeoutInSec;
-    this.validateMinimalAllowedTimeOut(lockHoldTime);
-    const expire = this.getLockTtlUtcTimestamp(lockHoldTime);
+    const lockHoldTimeInSec = lockTimeoutInSec || this.lockTimeoutInSec;
+    this.validateMinimalAllowedTimeOut(lockHoldTimeInSec);
+    const expire = this.getLockTtlUtcTimestamp(lockHoldTimeInSec);
     const condition = getInsertCondition(id);
 
     const lock = await Dynamodb.createLock({
       id,
       timestamp: expire,
-      ttl: this.getLockTtlUtcTimestamp(lockHoldTime + ONE_SECOND),
+      ttl: this.getLockTtlUtcTimestamp(lockHoldTimeInSec + 1),
     }, {
       condition,
       overwrite: true,
