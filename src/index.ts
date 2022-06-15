@@ -82,7 +82,7 @@ export class LocksManager {
 
   acquireWithRetry(
     id: string,
-    lockTimeoutIsSec?: number,
+    lockTimeoutInSec?: number,
     maxRetries?: number,
   ): Promise<LockResponse> {
     const retryOptions = {
@@ -92,17 +92,17 @@ export class LocksManager {
 
     return retry<LockResponse>(  (_, attempt) => {
       this.logger.info('Attempting to lock', { attempt });
-      return this.acquire(id, lockTimeoutIsSec);
+      return this.acquire(id, lockTimeoutInSec);
     }, retryOptions);
   }
 
   async acquire(
     id: string,
-    lockTimeoutIsSec?: number,
+    lockTimeoutInSec?: number,
   ): Promise<LockResponse> {
     let lock;
     try {
-      lock = await this.acquireLock(id, lockTimeoutIsSec);
+      lock = await this.acquireLock(id, lockTimeoutInSec);
     } catch (e) {
       throw new CouldNotAcquireLockError(e.message, e.code);
     }
