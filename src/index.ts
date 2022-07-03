@@ -91,7 +91,7 @@ export class LocksManager {
     };
 
     return retry<LockResponse>(  (_, attempt) => {
-      this.logger.info('Attempting to lock', { attempt });
+      this.logger.debug('Attempting to lock', { attempt });
       return this.acquire(id, lockTimeoutInSec);
     }, retryOptions);
   }
@@ -106,8 +106,6 @@ export class LocksManager {
     } catch (e) {
       throw new CouldNotAcquireLockError(e.message, e.code);
     }
-
-    this.logger.debug('Got lock', { id, lock });
 
     return lock;
   }
@@ -132,6 +130,7 @@ export class LocksManager {
 
     this.logger.debug('Got lock', {
       id,
+      lock,
     });
 
     return {
