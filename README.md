@@ -172,6 +172,7 @@ const isLocked = await locksManager.isLocked(id);
  * 2.0.0 - **Note! This version is not backward compatible with previous version.** The locking concept has changed. This version will set lock expiration time as `now + requested locking time`. New lock request will compare between `now` and expiration time as it was set in the record.
  * 3.0.0 - **Note! This version is not backward compatible with previous version.** Removed withLock functionality.
  * 3.0.1 - Fixed logs
+ * 3.0.2 - Changed minimum allowed lock timeout to 3 seconds
  If you wish to lock anything you can use acquire/acquireWithRetry and release on done/error.
  Added maxRetries as optional to acquireWithRetry function.
 

@@ -18,7 +18,7 @@ import { addSecondsOnTimestamp, getUtcTimeHandler, getUtcTimestamp } from './uti
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
-  private readonly MINIMAL_ALLOWED_TIMEOUT_IN_SEC = 30;
+  private readonly MINIMAL_ALLOWED_TIMEOUT_IN_SEC = 3;
 
   private readonly DEFAULT_LOCK_TIMEOUT_IN_SEC = 15 * 60;
 
