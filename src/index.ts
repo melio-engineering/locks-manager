@@ -1,3 +1,4 @@
+import retry from 'async-retry';
 import config from 'config';
 import * as dynamoose from 'dynamoose';
 import Logger from 'log4js';
@@ -13,20 +14,17 @@ import { LockTimeoutTooShortError } from './errors/lock-timeout-too-short-error'
 import { MissingPropertyError } from './errors/missing-property-error';
 import { NotInitializedError } from './errors/not-initialized-error';
 import { LocksManagerOptions } from './types/locks-manager-options';
-import { Timers } from './utils/timers';
 import { addSecondsOnTimestamp, getUtcTimeHandler, getUtcTimestamp } from './utils/timestamp';
-
-const ONE_SECOND = 1;
 
 export class LocksManager {
   // Due to DynamoDb r/w latency we do not allow lock time shorter than 30 sec
-  private readonly MINIMAL_ALLOWED_TIMEOUT_IN_SEC = 30;
+  private readonly MINIMAL_ALLOWED_TIMEOUT_IN_SEC = 3;
 
   private readonly DEFAULT_LOCK_TIMEOUT_IN_SEC = 15 * 60;
 
   private readonly DEFAULT_LOCK_RETRY_INTERVAL_IN_MS = 1000;
 
-  private readonly DEFAULT_MAX_ALLOWED_TRIES_NUMBER = 10;
+  private readonly DEFAULT_MAX_ALLOWED_TRIES_NUMBER = 9;
 
   private static readonly CONDITION_FAILED_ERROR_CODE = 'ConditionalCheckFailedException';
 
@@ -86,15 +84,49 @@ export class LocksManager {
     return LocksManager.instance;
   }
 
-  async acquire(id: string, lockTimeoutIsSec?: number): Promise<LockResponse> {
-    const lockHoldTime = lockTimeoutIsSec || this.lockTimeoutInSec;
-    this.validateMinimalAllowedTimeOut(lockHoldTime);
-    const expire = this.getLockTtlUtcTimestamp(lockHoldTime);
+  acquireWithRetry(
+    id: string,
+    lockTimeoutInSec?: number,
+    maxRetries?: number,
+  ): Promise<LockResponse> {
+    const retryOptions = {
+      maxTimeout: this.lockRetryIntervalInMs,
+      retries: maxRetries || this.maxAllowedTriesNumber,
+    };
+
+    return retry<LockResponse>(  (_, attempt) => {
+      this.logger.debug('Attempting to lock', { attempt });
+      return this.acquire(id, lockTimeoutInSec);
+    }, retryOptions);
+  }
+
+  async acquire(
+    id: string,
+    lockTimeoutInSec?: number,
+  ): Promise<LockResponse> {
+    let lock;
+    try {
+      lock = await this.acquireLock(id, lockTimeoutInSec);
+    } catch (e) {
+      throw new CouldNotAcquireLockError(e.message, e.code);
+    }
+
+    return lock;
+  }
+
+  private async acquireLock(
+    id: string,
+    lockTimeoutInSec?: number,
+  ): Promise<LockResponse> {
+    const lockHoldTimeInSec = lockTimeoutInSec || this.lockTimeoutInSec;
+    this.validateMinimalAllowedTimeOut(lockHoldTimeInSec);
+    const expire = this.getLockTtlUtcTimestamp(lockHoldTimeInSec);
     const condition = getInsertCondition(id);
+
     const lock = await Dynamodb.createLock({
       id,
       timestamp: expire,
-      ttl: this.getLockTtlUtcTimestamp(lockHoldTime + ONE_SECOND),
+      ttl: this.getLockTtlUtcTimestamp(lockHoldTimeInSec + 1),
     }, {
       condition,
       overwrite: true,
@@ -102,6 +134,7 @@ export class LocksManager {
 
     this.logger.debug('Got lock', {
       id,
+      lock,
     });
 
     return {
@@ -110,51 +143,16 @@ export class LocksManager {
     };
   }
 
-  async acquireWithRetry(
-    id: string, tryNumber = 1, lockTimeout?: number,
-  ): Promise<LockResponse> {
-    let lock;
-    try {
-      lock = await this.acquire(id, lockTimeout);
-    } catch (e: any) {
-      if (
-        e.code === LocksManager.CONDITION_FAILED_ERROR_CODE
-        && tryNumber <= this.maxAllowedTriesNumber
-      ) {
-        await Timers.delay(this.lockRetryIntervalInMs);
-        return this.acquireWithRetry(id, tryNumber + 1, lockTimeout);
-      }
-
-      throw new CouldNotAcquireLockError(e.message, e.code);
-    }
-
-    lock.try = tryNumber;
-    return lock;
-  }
 
   async release(lock: LockResponse): Promise<void> {
     if (!lock.owner || !lock.id) {
       throw new MissingPropertyError(['id', 'owner']);
     }
 
-    this.logger.debug('Releasing lock', {
-      id: lock,
-    });
+    this.logger.debug('Releasing lock', { id: lock });
 
     const condition = getDeleteCondition(lock.owner);
     await Dynamodb.releaseLock(lock.id, { condition });
-  }
-
-  async withLock(id: string, cb: any): Promise<boolean> {
-    const lock = await this.acquire(id);
-
-    if (lock) {
-      await cb();
-      await this.release(lock);
-      return true;
-    }
-
-    return false;
   }
 
   async isLocked(id: string): Promise<boolean> {
