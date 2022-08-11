@@ -71,64 +71,62 @@ Meaning two different processes won't be able to hijack a lock form one another.
 ## Prerequisite
 In order to use Locks Manager you must have a dynamoDb instance running and a dedicated table
 For locks (and of coarse aws policy) .<br>
-We recommend the usage of different table for each process.
+We recommend the usage of different table for each service.
+
 The table schema should be as follows:
-(This example is using terraform, however, you cna build the table in any other way)
+This example is using cloud formation, however, you cna build the table in any other way.
+Don't forget to replace <<YOUR-TABLE-NAME>>.
 
 ```
- resource aws_dynamodb_table "%RESOURCE_NAME%" {
-  name         = "%TABLE_NAME%"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "id"
+  ##########################################
+  # DynamoDb Tables                        #
+  ##########################################
 
-  attribute {
-    name = "id"
-    type = "S"
-  }
+  LocksManagerDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      TableName: !Sub '${Environment}-<<YOURE-TABLE-NAME>>'
+      Tags:
+        - Key: Name
+          Value: masi-locks-manager
+        - Key: Environment
+          Value: !Ref Environment
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
 
-  tags = {
-    Name        = "%NAME%"
-    Environment = %ENV%
-  }
-}
-
-resource aws_iam_role_policy "%RESOURCE_NAME%" {
-  name_prefix = "%PREFIX%"
-  role        = aws_iam_role.main.id
-
-  policy = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
-      {
-        Sid: "ListAndDescribe",
-        Effect: "Allow",
-        Action: [
-          "dynamodb:List*",
-          "dynamodb:DescribeTimeToLive"
-        ],
-        Resource: "*"
-      },
-      {
-        Sid: "SpecificTable",
-        Effect: "Allow",
-        Action: [
-          "dynamodb:DescribeTable",
-          "dynamodb:Get*",
-          "dynamodb:Query",
-          "dynamodb:Scan",
-          "dynamodb:Delete*",
-          "dynamodb:Update*",
-          "dynamodb:PutItem"
-        ],
-        Resource: [
-          "arn:aws:dynamodb:*:*:table/${aws_dynamodb_table.%TABLE_NAME%.name}",
-          "arn:aws:dynamodb:*:*:table/${aws_dynamodb_table.%TABLE_NAME%.name}/index/*"
-        ]
-      }
-    ]
-  })
-}
-
+  ##########################################
+  # Lambda with policy example             #
+  ##########################################
+        
+  LambdaWithPolicFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Use lambda with DynamoDB table
+      FunctionName: !Sub '${Environment}-lambda-with-policy'
+      Handler: path/to/your/handler
+      MemorySize: 128
+      Timeout: 5
+      Policies:
+        - Statement:
+            - Sid: LocksManagerTable
+              Effect: Allow
+              Action: [
+                  "dynamodb:DescribeTable",
+                  "dynamodb:Delete*",
+                  "dynamodb:PutItem"
+              ]
+              Resource: !GetAtt LocksManagerDynamoDbTable.Arn
+      Environment:
+        Variables:
+          LOCK_MANAGER_TABLE_NAME: !Ref LocksManagerDynamoDbTable        
 ```
 
 ## Usage
@@ -166,6 +164,18 @@ await locksManager.release(lock);
 
 const isLocked = await locksManager.isLocked(id);
 ```
+
+## Using local dynamo instance for testing
+You can use a local instance of DynamoDB for testing (via DOcker).
+After your instance is running you can set the init options as follows: 
+```
+const options: LocksManagerOptions = {
+  isTestMode: true,
+  localDynamoInstanceUrl: 'localhost:9000'
+} 
+```
+Note that same as in standard usage you can still config all the other parameters as well.
+Don't forget to replace the `localDynamoInstanceUrl` with yours.
 
 #### Release History
  * 1.0.0 - First release Lock manager based on DynamoDb
