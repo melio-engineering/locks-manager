@@ -65,15 +65,15 @@ export class LocksManager {
   static init(options?: LocksManagerOptions) {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
-      LocksManager.initDynamoInstance(options?.isTestMode, options?.localDynamoInstanceUrl);
+      LocksManager.initDynamoInstance(options?.useLocalInstance, options?.localDynamoInstanceUrl);
       return LocksManager;
     }
 
     throw new CanOnlyInitOnceError();
   }
 
-  private static initDynamoInstance(isTestMode?: boolean, localDynamoInstanceUrl?: string) {
-    isTestMode ? dynamoose.aws.ddb.local(localDynamoInstanceUrl) : dynamoose.aws.ddb();
+  private static initDynamoInstance(useLocalInstance?: boolean, localDynamoInstanceUrl?: string) {
+    useLocalInstance ? dynamoose.aws.ddb.local(localDynamoInstanceUrl) : dynamoose.aws.ddb();
   }
 
   static getInstance() {

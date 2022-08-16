@@ -165,13 +165,13 @@ await locksManager.release(lock);
 const isLocked = await locksManager.isLocked(id);
 ```
 
-## Using local dynamo instance for testing
+## Using local dynamo instance (i.e for testing)
 You can use a local instance of DynamoDB for testing (via DOcker).
 After your instance is running you can set the init options as follows: 
 ```
 const options: LocksManagerOptions = {
-  isTestMode: true,
-  localDynamoInstanceUrl: 'localhost:9000'
+  useLocalInstance: true,
+  localDynamoInstanceUrl: 'localhost:8000'
 } 
 ```
 Note that same as in standard usage you can still config all the other parameters as well.
