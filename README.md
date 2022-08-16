@@ -165,13 +165,12 @@ await locksManager.release(lock);
 const isLocked = await locksManager.isLocked(id);
 ```
 
-## Using local dynamo instance (i.e for testing)
-You can use a local instance of DynamoDB for testing (via DOcker).
+## Using local dynamo instance
+You can use a local instance of DynamoDB (i.e. for testing via DOcker).
 After your instance is running you can set the init options as follows: 
 ```
 const options: LocksManagerOptions = {
-  useLocalInstance: true,
-  localDynamoInstanceUrl: 'localhost:8000'
+  dynamoInstanceEndpoint: 'localhost:8000'
 } 
 ```
 Note that same as in standard usage you can still config all the other parameters as well.
@@ -183,6 +182,7 @@ Don't forget to replace the `localDynamoInstanceUrl` with yours.
  * 3.0.0 - **Note! This version is not backward compatible with previous version.** Removed withLock functionality.
  * 3.0.1 - Fixed logs
  * 3.0.2 - Changed minimum allowed lock timeout to 3 seconds
+ * 3.0.3 - We now support the usage of custom DynamoDB instance.
  If you wish to lock anything you can use acquire/acquireWithRetry and release on done/error.
  Added maxRetries as optional to acquireWithRetry function.
 
