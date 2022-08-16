@@ -74,7 +74,7 @@ For locks (and of coarse aws policy) .<br>
 We recommend the usage of different table for each service.
 
 The table schema should be as follows:
-This example is using cloud formation, however, you cna build the table in any other way.
+This example is using CloudFormation, however, you cna build the table in any other way.
 Don't forget to replace <<YOUR-TABLE-NAME>>.
 
 ```
@@ -165,8 +165,8 @@ await locksManager.release(lock);
 const isLocked = await locksManager.isLocked(id);
 ```
 
-## Using local dynamo instance
-You can use a local instance of DynamoDB (i.e. for testing via DOcker).
+## Using custom dynamo instance
+You can use a custom instance of DynamoDB (i.e. for testing via Docker).
 After your instance is running you can set the init options as follows: 
 ```
 const options: LocksManagerOptions = {
