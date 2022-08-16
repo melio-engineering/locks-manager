@@ -3,5 +3,5 @@ export interface LocksManagerOptions {
   lockTimeoutInSec?: number;
   maxAllowedTriesNumber?: number;
   lockRetryIntervalInMs?: number;
-  dynamoInstanceEndpoint?: string;
+  dynamoInstanceLocalEndpoint?: string;
 }

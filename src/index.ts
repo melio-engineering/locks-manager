@@ -65,7 +65,7 @@ export class LocksManager {
   static init(options?: LocksManagerOptions) {
     if (!LocksManager.instance) {
       LocksManager.instance = new LocksManager(options);
-      LocksManager.initDynamoInstance(options?.dynamoInstanceEndpoint);
+      LocksManager.initDynamoInstance(options?.dynamoInstanceLocalEndpoint);
       return LocksManager;
     }
 

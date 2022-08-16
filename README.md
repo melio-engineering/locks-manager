@@ -170,11 +170,11 @@ You can use a custom instance of DynamoDB (i.e. for testing via Docker).
 After your instance is running you can set the init options as follows: 
 ```
 const options: LocksManagerOptions = {
-  dynamoInstanceEndpoint: 'localhost:8000'
+  dynamoInstanceLocalEndpoint: 'localhost:8000'
 } 
 ```
 Note that same as in standard usage you can still config all the other parameters as well.
-Don't forget to replace the `dynamoInstanceEndpoint` with your instance.
+Don't forget to replace the `dynamoInstanceLocalEndpoint` with your instance.
 
 #### Release History
  * 1.0.0 - First release Lock manager based on DynamoDb
