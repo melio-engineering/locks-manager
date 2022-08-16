@@ -174,7 +174,7 @@ const options: LocksManagerOptions = {
 } 
 ```
 Note that same as in standard usage you can still config all the other parameters as well.
-Don't forget to replace the `localDynamoInstanceUrl` with yours.
+Don't forget to replace the `dynamoInstanceEndpoint` with your instance.
 
 #### Release History
  * 1.0.0 - First release Lock manager based on DynamoDb
