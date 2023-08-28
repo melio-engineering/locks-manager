@@ -1,10 +1,10 @@
 import * as dynamoose from 'dynamoose';
-import { DocumentSaveSettings } from 'dynamoose/dist/Document';
 import { ModelType } from 'dynamoose/dist/General';
 import { MissingTableNameError } from '../errors/missing-table-name-error';
 import { Lock } from './models/lock';
 import { schema } from './schema';
 import { schemaOptions } from './schema-options';
+import { ItemSaveSettings } from "dynamoose/dist/Item";
 
 export class Dynamodb {
   static tableName: string;
@@ -21,7 +21,7 @@ export class Dynamodb {
     return dynamoose.model<Lock>(Dynamodb.tableName, schema, schemaOptions);
   }
 
-  static async createLock(document: Partial<Lock>, options: DocumentSaveSettings): Promise<Lock> {
+  static async createLock(document: Partial<Lock>, options: ItemSaveSettings): Promise<Lock> {
     const lockModel: ModelType<Lock> = Dynamodb.getModel();
     return lockModel.create(document, options);
   }
