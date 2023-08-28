@@ -1,6 +1,6 @@
 {
   "name": "@melio/locks-manager",
-  "version": "3.0.4",
+  "version": "4.0.0",
   "description": "Create MUTEX locks using DynamoDB",
   "main": "dist/index.js",
   "scripts": {

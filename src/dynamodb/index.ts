@@ -1,10 +1,10 @@
 import * as dynamoose from 'dynamoose';
 import { ModelType } from 'dynamoose/dist/General';
+import { ItemSaveSettings } from 'dynamoose/dist/Item';
 import { MissingTableNameError } from '../errors/missing-table-name-error';
 import { Lock } from './models/lock';
 import { schema } from './schema';
 import { schemaOptions } from './schema-options';
-import { ItemSaveSettings } from "dynamoose/dist/Item";
 
 export class Dynamodb {
   static tableName: string;
