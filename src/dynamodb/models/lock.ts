@@ -1,7 +1,8 @@
-import { AnyDocument } from 'dynamoose/dist/Document';
+import { Item } from 'dynamoose/dist/Item';
 
-export interface Lock extends AnyDocument {
+export interface Lock extends Item {
   id: string | null;
   timestamp: number | undefined;
+  ttl: number;
   owner: string;
 }

@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: circleci/node:14
+      - image: 051743955311.dkr.ecr.us-east-1.amazonaws.com/build-images:sam-node-18
 
     steps:
       - run:
@@ -35,7 +35,7 @@ jobs:
 
   publish:
     docker:
-      - image: circleci/node:14
+      - image: 051743955311.dkr.ecr.us-east-1.amazonaws.com/build-images:sam-node-18
 
     steps:
       - checkout
