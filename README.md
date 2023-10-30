@@ -183,6 +183,7 @@ Don't forget to replace the `dynamoInstanceLocalEndpoint` with your instance.
  * 3.0.1 - Fixed logs
  * 3.0.2 - Changed minimum allowed lock timeout to 3 seconds
  * 3.0.3 - We now support the usage of custom DynamoDB instance.
+ * 4.0.0 - Migrate to Node 18 and AWS sdk-v3
  If you wish to lock anything you can use acquire/acquireWithRetry and release on done/error.
  Added maxRetries as optional to acquireWithRetry function.
 
