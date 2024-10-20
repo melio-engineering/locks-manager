@@ -5,7 +5,7 @@ export class CouldNotAcquireLockError extends Error {
   constructor(message = '', code?: string) {
     super();
     this.message = message || 'Could not acquire lock';
-    this.code = code || undefined;
+    this.code = code || '423';
     this.ignoreBySentry = true;
   }
 }
